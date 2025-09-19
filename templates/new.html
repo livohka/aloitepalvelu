@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Uusi aloite — Aloitepalvelu{% endblock %}
+
+{% block header %}
+    <a href="{{ url_for('index') }}">Etusivu</a>
+    <a href="{{ url_for('user') }}">Omat tiedot</a>
+    <a href="{{ url_for('logout') }}">Kirjaudu ulos</a>
+{% endblock %}
+
+{% block main %}
+    <h2>Luo uusi aloite</h2>
+     <form action="/create" method="post">
+    <p>
+      Otsikko: <br>
+      <input type="text" name="title">
+    </p>
+    <p>
+      Kuvaus: <br>
+      <textarea name="description" rows="3" cols="40"></textarea>
+    </p>
+    <p>
+      <input type="submit" value="Lähetä">
+    </p>
+  </form>
+{% endblock %}

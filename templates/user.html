@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Omat tiedot — Aloitepalvelu{% endblock %}
+
+{% block header %}
+    <a href="{{ url_for('index') }}">Etusivu</a>
+    <a href="{{ url_for('user') }}">Omat tiedot</a>
+    <a href="{{ url_for('logout') }}">Kirjaudu ulos</a>
+{% endblock %}
+
+{% block main %}
+    <h2>Tälle sivulle käyttäjän omat tiedot</h2>
+    <p>omat allekirjoitukset, hallinta ja poisto</p>
+{% endblock %}
