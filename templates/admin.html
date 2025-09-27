@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Admin — Aloitepalvelu{% endblock %}
+
+{% block header %}
+  <a href="{{ url_for('index') }}">Home</a>
+  <a href="{{ url_for('admin_dashboard') }}">Admin</a>
+  <a href="{{ url_for('logout') }}">Logout</a>
+{% endblock %}
+
+{% block main %}
+  <h2>Admin Dashboard</h2>
+
+  <h3>Users</h3>
+<ul>
+  {% for u in users %}
+    <li>
+      {{ u.username }}
+      {% if u.is_admin %}
+        (admin)
+        {% if u.id != session.user_id %}
+          <form method="post" action="{{ url_for('admin_remove_admin', id=u.id) }}" style="display:inline;">
+            <button type="submit">Remove admin rights</button>
+          </form>
+        {% endif %}
+      {% else %}
+        <form method="post" action="{{ url_for('admin_make_admin', id=u.id) }}" style="display:inline;">
+          <button type="submit">Grant admin rights</button>
+        </form>
+      {% endif %}
+
+      {% if u.id != session.user_id %}
+        <form method="post" action="{{ url_for('admin_delete_user', id=u.id) }}" style="display:inline;">
+          <button type="submit" onclick="return confirm('Delete user {{u.username}}?')">Delete User</button>
+        </form>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+
+  <h3>Initiatives</h3>
+<ul>
+  {% for i in initiatives %}
+    <li>
+      <strong>{{ i.title }}</strong> — author: {{ i.username }}
+      {% if i.deleted %}<em>(deleted)</em>{% endif %}
+      {% if not i.active %}<em>(deactivated)</em>{% endif %}
+
+      <!-- Edit -->
+      <a href="{{ url_for('admin_edit_initiative', id=i.id) }}">Edit</a>
+
+      <!-- Activate / deactivate -->
+      {% if i.active %}
+        <form method="post" action="{{ url_for('admin_deactivate_initiative', id=i.id) }}" style="display:inline;">
+          <button type="submit">Deactivate</button>
+        </form>
+      {% else %}
+        <form method="post" action="{{ url_for('admin_activate_initiative', id=i.id) }}" style="display:inline;">
+          <button type="submit">Activate</button>
+        </form>
+      {% endif %}
+
+      <!-- Delete -->
+      {% if not i.deleted %}
+        <form method="post" action="{{ url_for('admin_delete_initiative', id=i.id) }}" style="display:inline;">
+          <button type="submit" onclick="return confirm('Mark this initiative as deleted?')">Delete</button>
+        </form>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}

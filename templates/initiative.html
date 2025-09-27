@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Aloitteen sivu — Aloitepalvelu{% endblock %}
+
+{% block main %}
+  <h1>{{ initiative.title }}</h1>
+  <p>{{ initiative.description }}</p>
+
+  {% if initiative.image %}
+    <p><img src="{{ url_for('initiative_image', id=initiative.id) }}" alt="Aloitteen kuva" style="max-width:300px;"></p>
+  {% endif %}
+
+  <p>Tekijä: {{ initiative.username }}</p>
+  <p>Ääniä: {{ votes }}</p>
+
+  {% if initiative.active == 0 %}
+    <p style="color: gray;">Tämä aloite on deaktivoitu, äänestys ei ole mahdollista.</p>
+  {% else %}
+    {% if session.get('user_id') %}
+      <form method="post">
+        {% if user_vote %}
+          <button type="submit" name="unvote">Poista ääni</button>
+        {% else %}
+          <button type="submit" name="vote">Äänestä</button>
+        {% endif %}
+      </form>
+    {% else %}
+      <p><a href="{{ url_for('index') }}">Kirjaudu sisään</a> äänestääksesi</p>
+    {% endif %}
+  {% endif %}
+{% endblock %}

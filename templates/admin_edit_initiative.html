@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Muokkaa aloitetta (Admin) — Aloitepalvelu{% endblock %}
+
+{% block header %}
+  <a href="{{ url_for('index') }}">Etusivu</a>
+  <a href="{{ url_for('user') }}">Omat tiedot</a>
+  <a href="{{ url_for('logout') }}">Kirjaudu ulos</a>
+{% endblock %}
+
+{% block main %}
+  <h2>Muokkaa aloitetta</h2>
+
+  <p>
+    Tämänhetkinen tila:
+    {% if initiative.active %}
+      <strong style="color:green;">Aktiivinen</strong>
+    {% else %}
+      <strong style="color:red;">Deaktivoitu</strong>
+    {% endif %}
+  </p>
+
+  <form method="post" enctype="multipart/form-data">
+    <label>
+      Otsikko<br>
+      <input type="text" name="title" value="{{ initiative.title }}" required maxlength="200">
+    </label><br><br>
+
+    <label>
+      Kuvaus<br>
+      <textarea name="description" rows="5" cols="50" maxlength="2000">{{ initiative.description }}</textarea>
+    </label><br><br>
+
+    {% if initiative.image %}
+      <p>Nykyinen kuva:</p>
+      <img src="{{ url_for('initiative_image', id=initiative.id) }}" alt="Aloitteen kuva" style="max-width:200px;"><br><br>
+      <label>
+        <input type="checkbox" name="remove_image" value="1"> Poista nykyinen kuva
+      </label><br><br>
+    {% endif %}
+
+    <label>
+      Uusi kuva (jpg/png, max 100 kt)<br>
+      <input type="file" name="image" accept=".jpg,.jpeg,.png">
+    </label><br><br>
+
+    <button type="submit">Tallenna muutokset</button>
+    <a href="{{ url_for('user') }}">Peruuta</a>
+  </form>
+
+  <hr>
+
+{% if initiative.active %}
+  <form method="post" action="{{ url_for('admin_deactivate_initiative', id=initiative.id) }}">
+    <button type="submit" onclick="return confirm('Haluatko varmasti deaktivoida tämän aloitteen?')">
+      Deaktivoi aloite
+    </button>
+  </form>
+{% else %}
+  <form method="post" action="{{ url_for('admin_activate_initiative', id=initiative.id) }}">
+    <button type="submit" onclick="return confirm('Haluatko varmasti aktivoida tämän aloitteen?')">
+      Aktivoi aloite
+    </button>
+  </form>
+{% endif %}
+
+{% endblock %}

@@ -3,19 +3,18 @@
 {% block title %}Etusivu — Aloitepalvelu{% endblock %}
 
 {% block header %}
+  <a href="{{ url_for('index') }}">Etusivu</a>
   {% if session.get('username') %}
-    <a href="{{ url_for('index') }}">Etusivu</a>
     <a href="{{ url_for('user') }}">Omat tiedot</a>
     <a href="{{ url_for('logout') }}">Kirjaudu ulos</a>
-  {% else %}
-    <a href="{{ url_for('index') }}">Etusivu</a>
   {% endif %}
 {% endblock %}
 
 {% block main %}
   <h2>Tervetuloa Aloitepalveluun</h2>
   <p>Täällä voit tehdä aloitteita ja kerätä muiden käyttäjien allekirjoituksia.</p>
-{% if not session.get('username') %}
+
+  {% if not session.get('username') %}
     <h3>Kirjautuminen</h3>
     <form action="{{ url_for('login') }}" method="post">
       <label>
@@ -28,18 +27,22 @@
       </label>
       <button type="submit">Kirjaudu</button>
     </form>
+    <p>Ei vielä tunnusta? <a href="{{ url_for('register') }}">Rekisteröidy tästä</a></p>
   {% else %}
     <p>Olet kirjautunut sisään käyttäjänä <strong>{{ session.username }}</strong>.</p>
+    <p><a href="{{ url_for('new') }}">Luo uusi aloite</a></p>
   {% endif %}
 
+  <h3>Aloitteet</h3>
   <p>Aloitteiden määrä: {{ count }}</p>
-  <hr>
-  {% for initiative in initiatives %}
-    <h3>{{ initiative.title }}</h3>
-    <p>{{ initiative.description }}</p>
-    <hr>
-  {% endfor %}
-
-  <p><a href="/new">Luo uusi aloite</a></p>
-
+  <ul>
+    {% for initiative in initiatives %}
+      <li>
+        <a href="{{ url_for('initiative_page', id=initiative.id) }}">
+          {{ initiative.title }}
+        </a>
+        – tekijä: {{ initiative.username }}
+      </li>
+    {% endfor %}
+  </ul>
 {% endblock %}

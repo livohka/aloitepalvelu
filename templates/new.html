@@ -1,26 +1,42 @@
 {% extends "base.html" %}
 
-{% block title %}Uusi aloite — Aloitepalvelu{% endblock %}
+{% block title %}Aloitteen sivu — Aloitepalvelu{% endblock %}
 
 {% block header %}
-    <a href="{{ url_for('index') }}">Etusivu</a>
+  <a href="{{ url_for('index') }}">Etusivu</a>
+  {% if session.get('username') %}
     <a href="{{ url_for('user') }}">Omat tiedot</a>
     <a href="{{ url_for('logout') }}">Kirjaudu ulos</a>
+  {% endif %}
 {% endblock %}
 
 {% block main %}
-    <h2>Luo uusi aloite</h2>
-     <form action="/create" method="post">
-    <p>
-      Otsikko: <br>
-      <input type="text" name="title">
-    </p>
-    <p>
-      Kuvaus: <br>
-      <textarea name="description" rows="3" cols="40"></textarea>
-    </p>
-    <p>
-      <input type="submit" value="Lähetä">
-    </p>
+  <h2>Luo uusi aloite</h2>
+
+  <form method="post" action="{{ url_for('create') }}" enctype="multipart/form-data">
+    <label>
+      Otsikko<br>
+      <input type="text" name="title" required maxlength="200">
+    </label><br><br>
+
+    <label>
+      Kuvaus<br>
+      <textarea name="description" rows="5" cols="50" maxlength="2000"></textarea>
+    </label><br><br>
+
+    <label>
+      Tila<br>
+      <select name="active">
+        <option value="1" selected>Aktivoitu</option>
+        <option value="0">Deaktivoitu</option>
+      </select>
+    </label><br><br>
+
+    <label>
+      Kuva (jpg/png, max 100 kt)<br>
+      <input type="file" name="image" accept=".jpg,.jpeg,.png">
+    </label><br><br>
+
+    <button type="submit">Luo aloite</button>
   </form>
 {% endblock %}

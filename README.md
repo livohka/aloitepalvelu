@@ -1,12 +1,44 @@
 # aloitepalvelu
-Tietokannat ja web-ohjelmointi kurssityö. Aloitepalvelussa voi tehdä aloitteita ja kerätä muiden käyttäjien digitaalisia-allekirjoituksia aloitteille.
+Ajamalla 
 
+Tietokannat ja web-ohjelmointi kurssityö. Aloitepalvelussa voi tehdä aloitteita ja kerätä muiden käyttäjien digitaalisia-allekirjoituksia aloitteille.
 
 Aloitepalvelussa voi tehdä aloitteita ja kerätä muiden käyttäjien digitaalisia-allekirjoituksia aloitteille.
 
+1. Clone the repository
+git clone https://github.com/livohka/aloitepalvelu.git
+cd aloitepalvelu
+
+2. Create and activate a virtual environment
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# Linux / macOS
+source venv/bin/activate
+
+3. Install dependencies
+pip install -r requirements.txt
+
+4. Initialize the database with test data
+python init.db.py
+
+5. Run the development server
+flask run --debug
+
+6. Open in browser
+
+Go to:
+👉 http://127.0.0.1:5000
+
+"admin", "admin123"
+"matti", "salasana"
+
+
+
+
 **Käyttäjän ominaisuudet.**<br>
-Rekisteröityminen<br>
-	Kirjautuminen<br>
+Rekisteröityminen -valmis<br>
+	Kirjautuminen - valmis<br>
   Käyttäjätilin hallinta ja poistaminen<br><br>
 
 Digitaalinen allekirjoittaminen<br>
@@ -18,36 +50,14 @@ Digitaalinen allekirjoittaminen<br>
 
 
 **Ylläpitäjän ominaisuudet**<br>
-Aloitteen luominen<br>
+Aloitteen luominen - valmis<br>
   (alkupäivä, loppupäivä)<br>
-  kuvauskentät ja kuvat tarvittaessa.<br>
-  Aloitteen “muokkaus”<br>
-  Aloitteen disabloitu<br>
-  Aloitteen poisto, arkistonäkymä<br>
+  kuvauskentät ja kuvat tarvittaessa. -valmis<br>
+  Aloitteen “muokkaus” -valmis<br>
+  Aloitteen disabloitu -valmis<br>
+  Aloitteen poisto, arkistonäkymä - valmis<br>
   Yhteenveto allekirjoituksista<br><br>
 
 **Järjestelmänvalvojan ominaisuudet**<br>
-Käyttäjätilien ja oikeuksien hallinta<br>
-Aloitteiden ja allekirjoitusten hallinta<br><br>
-
-**Aikataulutus, tietoturva osana kehitystä.**<br>
-Viikko 1.<br>
-Tietokannan ja toimintojen suunnittelu<br>
-Rekisteröitymisen toteutus(käyttäjä/ylläpitäjä)<br><br>
-
-Viikko 2.<br>
-Järjestelmänvalvojan toimintojen toteutus<br>
-Ylläpitäjän toimintojen toteutus<br><br>
-
-Viikko 3-4.<br>
-Käyttäjän toiminnot<br>
-Koekäyttö ja tietoturva<br>
-Käytettävyys ja ulkoasu<br><br>
-
-Viikko5.<br>
-Projektin lopullinen toiminnallisuus valmistuu<br>
-Käyttöhjeet<br>
-Paketointi<br>
-Raportointi ja palautus<br><br>
-
-Toimintojen laajuus on rajattu kurssilla opetettaviin tekniikoihin.
+Käyttäjätilien ja oikeuksien hallinta -valmis<br>
+Aloitteiden ja allekirjoitusten hallinta -valmis<br><br>

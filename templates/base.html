@@ -7,11 +7,31 @@
   <body>
     <header class="header">
       <h1>Aloitepalvelu</h1>
-        <nav>{% block header %}{% endblock %}
-      </nav>
+<nav>
+  <a href="{{ url_for('index') }}">Etusivu</a>
+  {% if session.get('username') %}
+    <a href="{{ url_for('user') }}">Omat tiedot</a>
+    {% if session.get('is_admin')|int == 1 %}
+      <a href="{{ url_for('admin_dashboard') }}">Admin</a>
+    {% endif %}
+    <a href="{{ url_for('logout') }}">Kirjaudu ulos</a>
+  {% endif %}
+</nav>
+
     </header>
+  <!-- Flash-viestit kaikilla sivuilla -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flash-messages">
+          {% for message in messages %}
+            <li style="color: green;">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
     <main class="main">
-        {% block main %}{% endblock %}
+      {% block main %}{% endblock %}
     </main>
   </body>
 </html>

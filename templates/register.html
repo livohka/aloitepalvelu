@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Rekisteröidy</title>
+</head>
+<body>
+  <h1>Luo uusi käyttäjä</h1>
+
+  <form method="post">
+    <label>Käyttäjänimi:</label><br>
+    <input type="text" name="username" required><br><br>
+
+    <label>Salasana:</label><br>
+    <input type="password" name="password1" required><br><br>
+
+    <label>Salasana uudelleen:</label><br>
+    <input type="password" name="password2" required><br><br>
+
+    <input type="submit" value="Rekisteröidy">
+  </form>
+
+  <p>Onko sinulla jo tunnus? <a href="{{ url_for('index') }}">Kirjaudu sisään</a></p>
+</body>
+</html>

@@ -9,6 +9,35 @@
 {% endblock %}
 
 {% block main %}
-    <h2>Tälle sivulle käyttäjän omat tiedot</h2>
-    <p>omat allekirjoitukset, hallinta ja poisto</p>
+    <h2>Käyttäjän tiedot</h2>
+    <p><strong>Käyttäjätunnus:</strong> {{ user.username }}</p>
+
+<h3>Omat aloitteet</h3>
+{% if initiatives %}
+  <ul>
+  {% for initiative in initiatives %}
+    <li>
+      <strong>{{ initiative.title }}</strong>
+      {% if not initiative.active %}<em>(deaktivoitu)</em>{% endif %}<br>
+      {{ initiative.description }}<br>
+
+      <a href="{{ url_for('edit_initiative', id=initiative.id) }}">Muokkaa</a>
+
+      <form action="{{ url_for('delete_initiative', id=initiative.id) }}" method="post" style="display:inline;">
+        <button type="submit" onclick="return confirm('Haluatko varmasti poistaa tämän aloitteen?')">
+          Poista
+        </button>
+      </form>
+    </li>
+  {% endfor %}
+  </ul>
+{% else %}
+  <p>Et ole vielä tehnyt aloitteita.</p>
+{% endif %}
+
+
+    <h3>Käyttäjätili</h3>
+    <p>
+        <a href="{{ url_for('logout') }}">Kirjaudu ulos</a>
+    </p>
 {% endblock %}
