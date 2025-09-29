@@ -3,19 +3,27 @@ from werkzeug.security import generate_password_hash
 import os
 import random
 
-DB_FILE = "aloitepalvelu/database.db"
+# Polku projektin juureen (kansion, jossa init.db.py sijaitsee)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Load default image (kukka_optimized_50.png)
+# Tietokanta luodaan projektin juureen
+DB_FILE = os.path.join(BASE_DIR, "database.db")
+
+# Kuva sijaitsee static-hakemistossa
+DEFAULT_IMAGE_PATH = os.path.join(BASE_DIR, "static", "kukka_optimized_50.png")
+
+# Load default image
 def load_default_image():
-    default_path = os.path.join("aloitepalvelu", "static", "kukka_optimized_50.png")
-    with open(default_path, "rb") as f:
+    with open(DEFAULT_IMAGE_PATH, "rb") as f:
         return f.read()
 
 # Generate random long descriptions
 def random_description(min_len=100, max_len=1900):
-    text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " \
-           "Praesent vehicula, justo nec facilisis imperdiet, nulla massa malesuada sapien, " \
-           "nec varius lorem ipsum non risus. " * 50
+    text = (
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+        "Praesent vehicula, justo nec facilisis imperdiet, nulla massa malesuada sapien, "
+        "nec varius lorem ipsum non risus. "
+    ) * 50
     length = random.randint(min_len, max_len)
     return text[:length]
 
@@ -71,7 +79,9 @@ def init_db():
         ("matti", generate_password_hash("salasana"), 0),
         ("liisa", generate_password_hash("password"), 0),
     ]
-    cur.executemany("INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)", users)
+    cur.executemany(
+        "INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)", users
+    )
 
     default_img = load_default_image()
 
@@ -123,7 +133,7 @@ def init_db():
 
     con.commit()
     con.close()
-    print("Database created and filled with test data (default image + 20 extra initiatives).")
+    print(f"Database created at {DB_FILE} and filled with test data (default image + 20 extra initiatives).")
 
 if __name__ == "__main__":
     init_db()
