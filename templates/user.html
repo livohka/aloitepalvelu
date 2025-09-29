@@ -2,42 +2,59 @@
 
 {% block title %}Omat tiedot — Aloitepalvelu{% endblock %}
 
-{% block header %}
-    <a href="{{ url_for('index') }}">Etusivu</a>
-    <a href="{{ url_for('user') }}">Omat tiedot</a>
-    <a href="{{ url_for('logout') }}">Kirjaudu ulos</a>
-{% endblock %}
-
 {% block main %}
-    <h2>Käyttäjän tiedot</h2>
-    <p><strong>Käyttäjätunnus:</strong> {{ user.username }}</p>
+  <h2>Käyttäjän tiedot</h2>
+  <p><strong>Tunnus:</strong> {{ user.username }}</p>
 
-<h3>Omat aloitteet</h3>
-{% if initiatives %}
-  <ul>
-  {% for initiative in initiatives %}
-    <li>
-      <strong>{{ initiative.title }}</strong>
-      {% if not initiative.active %}<em>(deaktivoitu)</em>{% endif %}<br>
-      {{ initiative.description }}<br>
+  <form method="post" class="form">
+    <label>Etunimi:</label><br>
+    <input type="text" name="first_name" value="{{ user.first_name }}" required minlength="2"><br><br>
 
-      <a href="{{ url_for('edit_initiative', id=initiative.id) }}">Muokkaa</a>
+    <label>Sukunimi:</label><br>
+    <input type="text" name="last_name" value="{{ user.last_name }}" required minlength="2"><br><br>
 
-      <form action="{{ url_for('delete_initiative', id=initiative.id) }}" method="post" style="display:inline;">
-        <button type="submit" onclick="return confirm('Haluatko varmasti poistaa tämän aloitteen?')">
-          Poista
-        </button>
-      </form>
-    </li>
-  {% endfor %}
-  </ul>
-{% else %}
-  <p>Et ole vielä tehnyt aloitteita.</p>
-{% endif %}
+    <button type="submit">Päivitä tiedot</button>
+  </form>
 
+  <h3>Omat aloitteet</h3>
+  {% if initiatives %}
+    <div class="initiative-list">
+      {% for initiative in initiatives %}
+        <div class="initiative-card {% if not initiative.active %}inactive{% endif %}">
+          {% if initiative.image %}
+            <img src="{{ url_for('initiative_image', id=initiative.id) }}" alt="Kuva" class="initiative-thumb">
+          {% else %}
+            <img src="{{ url_for('static', filename='kukka_optimized_50.png') }}" alt="Oletuskuva" class="initiative-thumb">
+          {% endif %}
+          
+          <a href="{{ url_for('initiative_page', id=initiative.id) }}">
+            <h4>{{ initiative.title }}</h4>
+          </a>
 
-    <h3>Käyttäjätili</h3>
-    <p>
-        <a href="{{ url_for('logout') }}">Kirjaudu ulos</a>
-    </p>
+          <p>Allekirjoituksia: {{ initiative.signatures }}</p>
+
+          {% if initiative.active %}
+            <p style="color: green;">Aktiivinen</p>
+          {% else %}
+            <p style="color: red;">Deaktivoitu</p>
+          {% endif %}
+
+          <!-- Action buttons -->
+          <a href="{{ url_for('edit_initiative', id=initiative.id) }}">Muokkaa</a>
+          
+          {% if initiative.active %}
+            <form action="{{ url_for('deactivate_initiative', id=initiative.id) }}" method="post" style="display:inline;">
+              <button type="submit">Deaktivoi</button>
+            </form>
+          {% else %}
+            <form action="{{ url_for('activate_initiative', id=initiative.id) }}" method="post" style="display:inline;">
+              <button type="submit">Aktivoi</button>
+            </form>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>Et ole vielä tehnyt yhtään aloitetta.</p>
+  {% endif %}
 {% endblock %}

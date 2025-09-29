@@ -2,47 +2,85 @@
 
 {% block title %}Etusivu — Aloitepalvelu{% endblock %}
 
-{% block header %}
-  <a href="{{ url_for('index') }}">Etusivu</a>
-  {% if session.get('username') %}
-    <a href="{{ url_for('user') }}">Omat tiedot</a>
-    <a href="{{ url_for('logout') }}">Kirjaudu ulos</a>
-  {% endif %}
-{% endblock %}
-
 {% block main %}
   <h2>Tervetuloa Aloitepalveluun</h2>
   <p>Täällä voit tehdä aloitteita ja kerätä muiden käyttäjien allekirjoituksia.</p>
 
-  {% if not session.get('username') %}
-    <h3>Kirjautuminen</h3>
-    <form action="{{ url_for('login') }}" method="post">
-      <label>
-        Käyttäjätunnus
-        <input type="text" name="username" required maxlength="50">
-      </label>
-      <label>
-        Salasana
-        <input type="password" name="password" required maxlength="100">
-      </label>
-      <button type="submit">Kirjaudu</button>
-    </form>
-    <p>Ei vielä tunnusta? <a href="{{ url_for('register') }}">Rekisteröidy tästä</a></p>
-  {% else %}
+  {% if session.get('username') %}
     <p>Olet kirjautunut sisään käyttäjänä <strong>{{ session.username }}</strong>.</p>
     <p><a href="{{ url_for('new') }}">Luo uusi aloite</a></p>
   {% endif %}
 
-  <h3>Aloitteet</h3>
-  <p>Aloitteiden määrä: {{ count }}</p>
-  <ul>
-    {% for initiative in initiatives %}
-      <li>
-        <a href="{{ url_for('initiative_page', id=initiative.id) }}">
-          {{ initiative.title }}
-        </a>
-        – tekijä: {{ initiative.username }}
-      </li>
-    {% endfor %}
-  </ul>
+  <!-- Tabs -->
+  <div class="tabs">
+    <input type="radio" id="tab-open" name="tab" checked>
+    <label for="tab-open">Avoimet aloitteet</label>
+
+    <input type="radio" id="tab-closed" name="tab">
+    <label for="tab-closed">Suljetut aloitteet</label>
+
+    <input type="radio" id="tab-search" name="tab">
+    <label for="tab-search">Haku</label>
+
+    <div class="tab-panels">
+      <!-- Open initiatives -->
+      <div class="tab-panel" id="open">
+        {% if active_initiatives %}
+          <div class="initiative-list">
+            {% for initiative in active_initiatives %}
+              <div class="initiative-card">
+                {% if initiative.image %}
+                  <img src="{{ url_for('initiative_image', id=initiative.id) }}" alt="Kuva" class="initiative-thumb">
+                {% else %}
+                  <img src="{{ url_for('static', filename='kukka_optimized_50.png') }}" alt="Oletuskuva" class="initiative-thumb">
+                {% endif %}
+
+                <a href="{{ url_for('initiative_page', id=initiative.id) }}">
+                  <h4>{{ initiative.title }}</h4>
+                </a>
+                <p>Tekijä: {{ initiative.username }}</p>
+                <p>Allekirjoituksia: {{ initiative.signatures }}</p>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p>Ei avoimia aloitteita.</p>
+        {% endif %}
+      </div>
+
+      <!-- Closed initiatives -->
+      <div class="tab-panel" id="closed">
+        {% if inactive_initiatives %}
+          <div class="initiative-list">
+            {% for initiative in inactive_initiatives %}
+              <div class="initiative-card inactive">
+                {% if initiative.image %}
+                  <img src="{{ url_for('initiative_image', id=initiative.id) }}" alt="Kuva" class="initiative-thumb">
+                {% else %}
+                  <img src="{{ url_for('static', filename='kukka_optimized_50.png') }}" alt="Oletuskuva" class="initiative-thumb">
+                {% endif %}
+
+                <a href="{{ url_for('initiative_page', id=initiative.id) }}">
+                  <h4>{{ initiative.title }}</h4>
+                </a>
+                <p>Tekijä: {{ initiative.username }}</p>
+                <p>Allekirjoituksia: {{ initiative.signatures }}</p>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p>Ei suljettuja aloitteita.</p>
+        {% endif %}
+      </div>
+
+      <!-- Search -->
+      <div class="tab-panel" id="search">
+        <h3>Haku</h3>
+        <form method="get" action="{{ url_for('search') }}">
+          <input type="text" name="q" placeholder="Hae aloitteita...">
+          <button type="submit">Hae</button>
+        </form>
+      </div>
+    </div>
+  </div>
 {% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Haku — Aloitepalvelu{% endblock %}
+
+{% block main %}
+  <h2>Haku</h2>
+
+  <form method="get" action="{{ url_for('search') }}">
+    <input type="text" name="q" placeholder="Hae aloitteita..." value="{{ query }}">
+    <button type="submit">Hae</button>
+  </form>
+
+  {% if query %}
+    <h3>Tulokset haulle "{{ query }}"</h3>
+    {% if results %}
+      <div class="initiative-list">
+        {% for initiative in results %}
+          <div class="initiative-card">
+            {% if initiative.image %}
+              <img src="{{ url_for('initiative_image', id=initiative.id) }}" alt="Kuva" class="initiative-thumb">
+            {% else %}
+              <img src="{{ url_for('static', filename='kukka_optimized_50.png') }}" alt="Oletuskuva" class="initiative-thumb">
+            {% endif %}
+
+            <a href="{{ url_for('initiative_page', id=initiative.id) }}">
+              <h4>{{ initiative.title }}</h4>
+            </a>
+            <p>Tekijä: {{ initiative.username }}</p>
+            <p>Allekirjoituksia: {{ initiative.signatures }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>Ei hakutuloksia.</p>
+    {% endif %}
+  {% endif %}
+{% endblock %}

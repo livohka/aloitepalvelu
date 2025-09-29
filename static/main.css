@@ -1,0 +1,236 @@
+/* Header and nav */
+header {
+  background-color: #333;
+  padding: 10px;
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+
+/* Login form in nav */
+.nav-login-form {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.nav-login-form input {
+  padding: 5px;
+  font-size: 0.9em;
+}
+
+.nav-login-form button {
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.nav-login-form button:hover {
+  background-color: #004c99;
+}
+
+.nav-user {
+  color: #ddd;
+  margin-right: auto;
+}
+
+/* Tabs container */
+.tabs {
+  margin-top: 1em;
+}
+
+/* Hide radio buttons */
+.tabs input[type="radio"] {
+  display: none;
+}
+
+/* Style tab labels (buttons) */
+.tabs label {
+  display: inline-block;
+  padding: 10px 20px;
+  margin-right: -1px;
+  border: 1px solid #ccc;
+  background: #f1f1f1;
+  cursor: pointer;
+}
+
+.tabs input[type="radio"]:checked + label {
+  background: #ddd;
+  font-weight: bold;
+}
+
+/* Panels */
+.tab-panels {
+  border: 1px solid #ccc;
+  padding: 1em;
+  background: #fff;
+  margin-top: -1px; /* overlap border with active tab */
+}
+
+.tab-panel {
+  display: none;
+}
+
+#tab-open:checked ~ .tab-panels #open,
+#tab-closed:checked ~ .tab-panels #closed,
+#tab-search:checked ~ .tab-panels #search {
+  display: block;
+}
+
+/* General settings */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f5f5f5;
+}
+
+/* Top bar */
+header {
+  background-color: #333;
+  color: white;
+  padding: 10px;
+}
+
+header a {
+  color: white;
+  margin-right: 15px;
+  text-decoration: none;
+}
+
+header a:hover {
+  text-decoration: underline;
+}
+
+/* Main content */
+main {
+  padding: 20px;
+  max-width: 900px;
+  margin: auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
+/* Headings */
+h1, h2, h3 {
+  color: #333;
+}
+
+/* Forms */
+form {
+  margin-top: 15px;
+}
+
+input, textarea, button {
+  display: block;
+  margin-top: 8px;
+  padding: 8px;
+  font-size: 1em;
+}
+
+button {
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #004c99;
+}
+
+/* Initiative cards */
+.initiative-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.initiative-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.initiative-content p {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.initiative-image {
+  max-width: 300px;
+  border-radius: 6px;
+  margin-left: auto;
+}
+
+.initiative-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.initiative-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.initiative-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.initiative-card.inactive {
+  opacity: 0.7;
+  background-color: #f5f5f5;
+}
+
+.initiative-card h4 {
+  margin-top: 0;
+}
+
+.initiative-thumb {
+  width: 100%;
+  max-height: 150px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+/* Admin cards */
+.admin-card {
+  border: 2px solid green;
+}
+
+.deleted {
+  opacity: 0.5;
+  background-color: #eee;
+}
+
+/* Flash error messages */
+.flash-error {
+  color: red;
+  font-weight: bold;
+  font-size: 1.2em;
+  margin: 10px 0;
+}

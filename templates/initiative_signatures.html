@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Aloitteen allekirjoittajat — Aloitepalvelu{% endblock %}
+
+{% block main %}
+  <h2>Aloitteen "{{ initiative.title }}" allekirjoittajat</h2>
+
+  {% if signatures %}
+    <ul>
+      {% for s in signatures %}
+        <li>{{ s.username }} — {{ s.signed_at }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Tällä aloitteella ei ole vielä allekirjoituksia.</p>
+  {% endif %}
+{% endblock %}

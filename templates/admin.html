@@ -2,71 +2,80 @@
 
 {% block title %}Admin — Aloitepalvelu{% endblock %}
 
-{% block header %}
-  <a href="{{ url_for('index') }}">Home</a>
-  <a href="{{ url_for('admin_dashboard') }}">Admin</a>
-  <a href="{{ url_for('logout') }}">Logout</a>
-{% endblock %}
-
 {% block main %}
   <h2>Admin Dashboard</h2>
 
-  <h3>Users</h3>
-<ul>
-  {% for u in users %}
-    <li>
-      {{ u.username }}
-      {% if u.is_admin %}
-        (admin)
-        {% if u.id != session.user_id %}
-          <form method="post" action="{{ url_for('admin_remove_admin', id=u.id) }}" style="display:inline;">
-            <button type="submit">Remove admin rights</button>
+  <h3>Käyttäjät</h3>
+  <div class="initiative-list">
+    {% for u in users %}
+      <div class="initiative-card {% if u.is_admin %}admin-card{% endif %}">
+        <h4>{{ u.username }}</h4>
+        {% if u.is_admin %}
+          <p style="color: green;">Admin</p>
+          {% if u.id != session.user_id %}
+            <form method="post" action="{{ url_for('admin_remove_admin', id=u.id) }}" style="display:inline;">
+              <button type="submit">Poista admin-oikeudet</button>
+            </form>
+          {% endif %}
+        {% else %}
+          <form method="post" action="{{ url_for('admin_make_admin', id=u.id) }}" style="display:inline;">
+            <button type="submit">Anna admin-oikeudet</button>
           </form>
         {% endif %}
-      {% else %}
-        <form method="post" action="{{ url_for('admin_make_admin', id=u.id) }}" style="display:inline;">
-          <button type="submit">Grant admin rights</button>
-        </form>
-      {% endif %}
 
-      {% if u.id != session.user_id %}
-        <form method="post" action="{{ url_for('admin_delete_user', id=u.id) }}" style="display:inline;">
-          <button type="submit" onclick="return confirm('Delete user {{u.username}}?')">Delete User</button>
-        </form>
-      {% endif %}
-    </li>
-  {% endfor %}
-</ul>
+        {% if u.id != session.user_id %}
+          <form method="post" action="{{ url_for('admin_delete_user', id=u.id) }}" style="display:inline;">
+            <button type="submit" onclick="return confirm('Poistetaanko käyttäjä {{ u.username }}?')">Poista käyttäjä</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
 
-  <h3>Initiatives</h3>
-<ul>
-  {% for i in initiatives %}
-    <li>
-      <strong>{{ i.title }}</strong> — author: {{ i.username }}
-      {% if i.deleted %}<em>(deleted)</em>{% endif %}
-      {% if not i.active %}<em>(deactivated)</em>{% endif %}
+  <h3>Aloitteet</h3>
+  <div class="initiative-list">
+    {% for i in initiatives %}
+      <div class="initiative-card {% if not i.active %}inactive{% endif %} {% if i.deleted %}deleted{% endif %}">
+        {# Thumbnail image #}
+        {% if i.image %}
+          <img src="{{ url_for('initiative_image', id=i.id) }}" alt="Kuva" class="initiative-thumb">
+        {% else %}
+          <img src="{{ url_for('static', filename='kukka_optimized_50.png') }}" alt="Oletuskuva" class="initiative-thumb">
+        {% endif %}
 
-      <!-- Edit -->
-      <a href="{{ url_for('admin_edit_initiative', id=i.id) }}">Edit</a>
+        <h4>
+          <a href="{{ url_for('initiative_page', id=i.id) }}">{{ i.title }}</a>
+        </h4>
+        <p>Tekijä: {{ i.username }}</p>
+        <p>Allekirjoituksia: {{ i.signatures }}</p>
 
-      <!-- Activate / deactivate -->
-      {% if i.active %}
-        <form method="post" action="{{ url_for('admin_deactivate_initiative', id=i.id) }}" style="display:inline;">
-          <button type="submit">Deactivate</button>
-        </form>
-      {% else %}
-        <form method="post" action="{{ url_for('admin_activate_initiative', id=i.id) }}" style="display:inline;">
-          <button type="submit">Activate</button>
-        </form>
-      {% endif %}
+        <!-- Link to signatures list -->
+        <a href="{{ url_for('initiative_signatures', id=i.id) }}">Näytä allekirjoittajat</a>
 
-      <!-- Delete -->
-      {% if not i.deleted %}
-        <form method="post" action="{{ url_for('admin_delete_initiative', id=i.id) }}" style="display:inline;">
-          <button type="submit" onclick="return confirm('Mark this initiative as deleted?')">Delete</button>
-        </form>
-      {% endif %}
-    </li>
-  {% endfor %}
-</ul>
+        {% if i.deleted %}<p style="color: gray;">(poistettu)</p>{% endif %}
+        {% if not i.active %}<p style="color: red;">(deaktivoitu)</p>{% endif %}
+
+        <!-- Edit -->
+        <a href="{{ url_for('admin_edit_initiative', id=i.id) }}">Muokkaa</a>
+
+        <!-- Activate / deactivate -->
+        {% if i.active %}
+          <form method="post" action="{{ url_for('admin_deactivate_initiative', id=i.id) }}" style="display:inline;">
+            <button type="submit">Deaktivoi</button>
+          </form>
+        {% else %}
+          <form method="post" action="{{ url_for('admin_activate_initiative', id=i.id) }}" style="display:inline;">
+            <button type="submit">Aktivoi</button>
+          </form>
+        {% endif %}
+
+        <!-- Delete -->
+        {% if not i.deleted %}
+          <form method="post" action="{{ url_for('admin_delete_initiative', id=i.id) }}" style="display:inline;">
+            <button type="submit" onclick="return confirm('Merkitäänkö aloite poistetuksi?')">Poista</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
 {% endblock %}

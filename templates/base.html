@@ -1,37 +1,48 @@
+<!doctype html>
 <html lang="fi">
-  <head>
-    <meta charset="utf-8" />
-    <title>{% block title %}Aloitepalvelu{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
-  </head>
-  <body>
-    <header class="header">
-      <h1>Aloitepalvelu</h1>
-<nav>
-  <a href="{{ url_for('index') }}">Etusivu</a>
-  {% if session.get('username') %}
-    <a href="{{ url_for('user') }}">Omat tiedot</a>
-    {% if session.get('is_admin')|int == 1 %}
-      <a href="{{ url_for('admin_dashboard') }}">Admin</a>
-    {% endif %}
-    <a href="{{ url_for('logout') }}">Kirjaudu ulos</a>
-  {% endif %}
-</nav>
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Aloitepalvelu{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+</head>
+<body>
+<header>
+  <nav>
+    <a href="{{ url_for('index') }}">Etusivu</a>
 
-    </header>
-  <!-- Flash-viestit kaikilla sivuilla -->
+    {% if session.get("username") %}
+      <span class="nav-user">Hei, {{ session.username }}</span>
+      <a href="{{ url_for('user') }}">Omat tiedot</a>
+
+      {% if session.get("is_admin") == 1 %}
+        <a href="{{ url_for('admin_dashboard') }}">Admin</a>
+      {% endif %}
+
+      <a href="{{ url_for('logout') }}">Kirjaudu ulos</a>
+    {% else %}
+      <!-- Kirjautumislomake suoraan headeriin -->
+      <form action="{{ url_for('login') }}" method="post" class="nav-login-form">
+        <input type="text" name="username" placeholder="Käyttäjätunnus" required>
+        <input type="password" name="password" placeholder="Salasana" required>
+        <button type="submit">Kirjaudu</button>
+      </form>
+      <a href="{{ url_for('register') }}">Rekisteröidy</a>
+    {% endif %}
+  </nav>
+</header>
+  <main>
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <ul class="flash-messages">
+        <div class="flash-messages">
           {% for message in messages %}
-            <li style="color: green;">{{ message }}</li>
+            <div class="flash-error">{{ message }}</div>
           {% endfor %}
-        </ul>
+        </div>
       {% endif %}
     {% endwith %}
 
-    <main class="main">
-      {% block main %}{% endblock %}
-    </main>
-  </body>
+
+    {% block main %}{% endblock %}
+  </main>
+</body>
 </html>

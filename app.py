@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, abort, flash, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.exceptions import Forbidden
 import secrets
 import db
 import sqlite3
@@ -10,39 +11,121 @@ app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)  # keep secret in production
 
 
+@app.errorhandler(403)
+def forbidden(e):
+    flash("Ei käyttöoikeutta pyydettyyn toimintoon.")
+    # Palaa edelliselle sivulle, jos referrer löytyy, muuten etusivulle
+    return redirect(request.referrer or url_for("index"))
+
+
 # --- HOME PAGE ---
 @app.route("/")
 def index():
-    initiatives = db.query("""
-        SELECT i.id, i.title, i.description, i.active, u.username
+    # Fetch active initiatives with signature count
+    active = db.query(
+        """
+        SELECT i.id, i.title, u.username, i.image,
+               COUNT(s.id) AS signatures
         FROM initiatives i
         JOIN users u ON i.creator_id = u.id
-        WHERE i.deleted = 0
-        ORDER BY i.id DESC
-    """)
-    count_row = db.query("SELECT COUNT(*) AS c FROM initiatives WHERE deleted = 0")
-    count = count_row[0]["c"] if count_row else 0
-    return render_template("index.html", initiatives=initiatives, count=count)
+        LEFT JOIN signatures s ON s.initiative_id = i.id
+        WHERE i.active = 1 AND i.deleted = 0
+        GROUP BY i.id
+        ORDER BY i.created_at DESC
+        """
+    )
+
+    # Fetch inactive initiatives with signature count
+    inactive = db.query(
+        """
+        SELECT i.id, i.title, u.username, i.image,
+               COUNT(s.id) AS signatures
+        FROM initiatives i
+        JOIN users u ON i.creator_id = u.id
+        LEFT JOIN signatures s ON s.initiative_id = i.id
+        WHERE i.active = 0 AND i.deleted = 0
+        GROUP BY i.id
+        ORDER BY i.created_at DESC
+        """
+    )
+
+    return render_template(
+        "index.html",
+        active_initiatives=active,
+        inactive_initiatives=inactive
+    )
+
 
 
 # --- USER PAGE ---
-@app.route("/user")
+@app.route("/user", methods=["GET", "POST"])
 def user():
     if "user_id" not in session:
         return redirect(url_for("index"))
 
-    rows = db.query("SELECT id, username FROM users WHERE id = ?", [session["user_id"]])
+    if request.method == "POST":
+        first_name = request.form["first_name"].strip()
+        last_name = request.form["last_name"].strip()
+
+        if len(first_name) < 2 or len(last_name) < 2:
+            flash("Etunimen ja sukunimen pitää olla vähintään 2 merkkiä")
+        else:
+            db.execute(
+                "UPDATE users SET first_name=?, last_name=? WHERE id=?",
+                [first_name, last_name, session["user_id"]],
+            )
+            flash("Tiedot päivitetty")
+
+        return redirect(url_for("user"))
+
+    # Hae käyttäjän tiedot
+    rows = db.query(
+        "SELECT id, username, first_name, last_name FROM users WHERE id = ?",
+        [session["user_id"]],
+    )
     if not rows:
         abort(404)
     user = rows[0]
 
-    # only show non-deleted initiatives for the user
+    # Käyttäjän aloitteet
     initiatives = db.query(
-        "SELECT id, title, description, active FROM initiatives WHERE creator_id = ? AND deleted = 0 ORDER BY id DESC",
+        """
+        SELECT i.id, i.title, i.description, i.active, i.image,
+               COUNT(s.id) AS signatures
+        FROM initiatives i
+        LEFT JOIN signatures s ON s.initiative_id = i.id
+        WHERE i.creator_id = ? AND i.deleted = 0
+        GROUP BY i.id
+        ORDER BY i.id DESC
+        """,
         [session["user_id"]],
     )
 
     return render_template("user.html", user=user, initiatives=initiatives)
+
+# --- SEARCH INITIATIVES ---
+@app.route("/search")
+def search():
+    query = request.args.get("q", "").strip()
+    results = []
+
+    if query:
+        results = db.query(
+            """
+            SELECT i.id, i.title, u.username, i.image,
+                   COUNT(s.id) AS signatures
+            FROM initiatives i
+            JOIN users u ON i.creator_id = u.id
+            LEFT JOIN signatures s ON s.initiative_id = i.id
+            WHERE i.deleted = 0
+              AND (i.title LIKE ? OR i.description LIKE ? OR u.username LIKE ?)
+            GROUP BY i.id
+            ORDER BY i.created_at DESC
+            """,
+            [f"%{query}%", f"%{query}%", f"%{query}%"]
+        )
+
+    return render_template("search.html", query=query, results=results)
 
 
 # --- EDIT INITIATIVE ---
@@ -152,40 +235,83 @@ def delete_initiative(id):
     return redirect(url_for("user"))
 
 
+# --- INITIATIVE SIGNATURES LIST ---
+@app.route("/initiative/<int:id>/signatures")
+def initiative_signatures(id):
+    if "user_id" not in session:
+        abort(403)
+
+    initiative = db.query(
+        "SELECT id, title, creator_id FROM initiatives WHERE id=? AND deleted=0",
+        [id]
+    )
+    if not initiative:
+        abort(404)
+    initiative = initiative[0]
+
+    # Allow only creator or admin
+    if initiative["creator_id"] != session["user_id"] and not session.get("is_admin"):
+        abort(403)
+
+    signatures = db.query(
+        """
+        SELECT u.username, s.signed_at
+        FROM signatures s
+        JOIN users u ON s.user_id = u.id
+        WHERE s.initiative_id = ?
+        ORDER BY s.signed_at DESC
+        """,
+        [id],
+    )
+
+    return render_template("initiative_signatures.html",
+                           initiative=initiative,
+                           signatures=signatures)
+
+
+
+
 # --- REGISTER NEW USER ---
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
         username = request.form["username"].strip()
+        first_name = request.form["first_name"].strip()
+        last_name = request.form["last_name"].strip()
         password1 = request.form["password1"]
         password2 = request.form["password2"]
 
+        # Validation
         if not username or not password1:
-            flash("Username and password are required")
+            flash("Käyttäjänimi ja salasana ovat pakollisia")
+            return redirect(url_for("register"))
+        if len(first_name) < 2 or len(last_name) < 2:
+            flash("Etunimen ja sukunimen on oltava vähintään 2 merkkiä")
             return redirect(url_for("register"))
         if password1 != password2:
-            flash("Passwords do not match")
+            flash("Salasanat eivät täsmää")
             return redirect(url_for("register"))
 
+        # Hash password
         hash_value = generate_password_hash(password1)
         try:
             db.execute(
-                "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                [username, hash_value],
+                "INSERT INTO users (username, first_name, last_name, password_hash) VALUES (?, ?, ?, ?)",
+                [username, first_name, last_name, hash_value],
             )
         except sqlite3.IntegrityError:
-            flash("Username is already taken")
+            flash("Käyttäjänimi on jo varattu")
             return redirect(url_for("register"))
 
+        # Auto-login new user
         row = db.query("SELECT id FROM users WHERE username = ?", [username])[0]
         session["username"] = username
         session["user_id"] = row["id"]
 
-        flash(f"Registration successful, welcome {username}!")
+        flash(f"Tervetuloa {first_name} {last_name}, rekisteröityminen onnistui!")
         return redirect(url_for("index"))
 
     return render_template("register.html")
-
 
 # --- LOGIN ---
 @app.route("/login", methods=["POST"])
@@ -202,7 +328,7 @@ def login():
     if check_password_hash(user["password_hash"], password):
         session["username"] = user["username"]
         session["user_id"] = user["id"]
-        session["is_admin"] = int(user["is_admin"])   # ensure it is int
+        session["is_admin"] = int(user["is_admin"])
         flash(f"Login successful, welcome {user['username']}!")
         return redirect(url_for("index"))
     else:
@@ -215,7 +341,7 @@ def login():
 def logout():
     session.pop("username", None)
     session.pop("user_id", None)
-    session.pop("is_admin", None)   # remove admin info from session
+    session.pop("is_admin", None)
     flash("You have been logged out")
     return redirect(url_for("index"))
 
@@ -238,17 +364,15 @@ def create():
     description = request.form["description"].strip()
     active = 1 if request.form.get("active") else 0
 
-    # Handle uploaded image
     image = None
     if "image" in request.files:
         file = request.files["image"]
         if file and file.filename:
             data = file.read()
-            if len(data) > 100 * 1024:  # max 100 KB
+            if len(data) > 100 * 1024:
                 return "Image too large (max 100 KB)", 400
             image = data
 
-    # If user did not upload an image → use default image
     if image is None:
         default_path = os.path.join(app.root_path, "static", "kukka_optimized_50.png")
         with open(default_path, "rb") as f:
@@ -266,14 +390,18 @@ def create():
 def initiative_image(id):
     rows = db.query("SELECT image FROM initiatives WHERE id=?", [id])
     if not rows or rows[0]["image"] is None:
-        abort(404)
-    image_bytes = rows[0]["image"]
+        default_path = os.path.join(app.root_path, "static", "kukka_optimized_50.png")
+        with open(default_path, "rb") as f:
+            image_bytes = f.read()
+    else:
+        image_bytes = rows[0]["image"]
+
     response = make_response(image_bytes)
     response.headers.set("Content-Type", "image/jpeg")
     return response
 
 
-# --- INITIATIVE PAGE + VOTING ---
+# --- INITIATIVE PAGE + SIGNATURES ---
 @app.route("/initiative/<int:id>", methods=["GET", "POST"])
 def initiative_page(id):
     initiative = db.query(
@@ -284,10 +412,10 @@ def initiative_page(id):
         abort(404)
     initiative = initiative[0]
 
-    user_vote = None
+    user_signature = None
     if "user_id" in session:
-        rows = db.query("SELECT 1 FROM votes WHERE user_id=? AND initiative_id=?", [session["user_id"], id])
-        user_vote = bool(rows)
+        rows = db.query("SELECT 1 FROM signatures WHERE user_id=? AND initiative_id=?", [session["user_id"], id])
+        user_signature = bool(rows)
 
     if request.method == "POST":
         if "user_id" not in session:
@@ -295,24 +423,24 @@ def initiative_page(id):
         if initiative["active"] == 0:
             abort(403)
 
-        if "vote" in request.form:
+        if "sign" in request.form:
             try:
                 db.execute(
-                    "INSERT INTO votes(user_id, initiative_id) VALUES (?, ?)",
+                    "INSERT INTO signatures(user_id, initiative_id) VALUES (?, ?)",
                     [session["user_id"], id]
                 )
             except sqlite3.IntegrityError:
                 pass
-        elif "unvote" in request.form:
+        elif "unsign" in request.form:
             db.execute(
-                "DELETE FROM votes WHERE user_id=? AND initiative_id=?",
+                "DELETE FROM signatures WHERE user_id=? AND initiative_id=?",
                 [session["user_id"], id]
             )
         return redirect(url_for("initiative_page", id=id))
 
-    votes = db.query("SELECT COUNT(*) AS c FROM votes WHERE initiative_id=?", [id])[0]["c"]
+    signatures = db.query("SELECT COUNT(*) AS c FROM signatures WHERE initiative_id=?", [id])[0]["c"]
 
-    return render_template("initiative.html", initiative=initiative, votes=votes, user_vote=user_vote)
+    return render_template("initiative.html", initiative=initiative, signatures=signatures, user_signature=user_signature)
 
 
 # --- ADMIN DECORATOR ---
@@ -334,9 +462,12 @@ def admin_required(f):
 def admin_dashboard():
     users = db.query("SELECT id, username, created_at, is_admin FROM users ORDER BY id")
     initiatives = db.query("""
-        SELECT i.id, i.title, i.description, i.active, i.deleted, u.username
+        SELECT i.id, i.title, i.description, i.active, i.deleted, i.image, u.username,
+               COUNT(s.id) AS signatures
         FROM initiatives i
         JOIN users u ON i.creator_id = u.id
+        LEFT JOIN signatures s ON s.initiative_id = i.id
+        GROUP BY i.id
         ORDER BY i.id DESC
     """)
     return render_template("admin.html", users=users, initiatives=initiatives)
@@ -355,7 +486,6 @@ def admin_restore_initiative(id):
 @app.route("/admin/initiative/<int:id>/purge", methods=["POST"])
 @admin_required
 def admin_purge_initiative(id):
-    db.execute("DELETE FROM votes WHERE initiative_id = ?", [id])
     db.execute("DELETE FROM signatures WHERE initiative_id = ?", [id])
     db.execute("DELETE FROM initiatives WHERE id = ?", [id])
     flash("Initiative permanently deleted")
@@ -366,11 +496,10 @@ def admin_purge_initiative(id):
 @app.route("/admin/user/<int:id>/delete", methods=["POST"])
 @admin_required
 def admin_delete_user(id):
-    if id == session.get("user_id"):   # prevent deleting your own account
+    if id == session.get("user_id"):
         flash("You cannot delete yourself!")
         return redirect(url_for("admin_dashboard"))
 
-    db.execute("DELETE FROM votes WHERE user_id = ?", [id])
     db.execute("DELETE FROM signatures WHERE user_id = ?", [id])
     db.execute("DELETE FROM initiatives WHERE creator_id = ?", [id])
     db.execute("DELETE FROM users WHERE id = ?", [id])

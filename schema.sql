@@ -31,10 +31,3 @@ DROP TABLE IF EXISTS votes;
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         signed_at TEXT DEFAULT (datetime('now'))
     );
-
-    CREATE TABLE votes (
-        id INTEGER PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        initiative_id INTEGER NOT NULL REFERENCES initiatives(id) ON DELETE CASCADE,
-        created_at TEXT DEFAULT (datetime('now'))
-    );
